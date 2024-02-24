@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SCNU_ACM_RANK</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="stylesheet" href="./sdk/sdk.css" />
+    <link rel="stylesheet" href="./sdk/helper.css" />
+    <link rel="stylesheet" href="./sdk/iconfont.css" />
+    <link rel="stylesheet" href="./sdk/antd.css" />
+    <!-- 这是默认主题所需的，如果是其他主题则不需要 -->
+    <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
+    <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
+    <!-- 不过 amis 开发团队几乎没测试过 IE 11 下的效果，所以可能有细节功能用不了，如果发现请报 issue -->
+    <style>
+      html,
+      body,
+      .app-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="app-wrapper"></div>
+    <script src="./sdk/sdk.js"></script>
+    <script type="text/javascript">
+      (function () {
+        let amis = amisRequire('amis/embed');
+        // 通过替换下面这个配置来生成不同页面
+        let amisJSON = {
+          type: 'page',
+          data: {
+            "token":"",
+            "user":{},
+            "ip":"10.252.145.15",
+            "port":"8887"
+          },
+          "id":"root",
+          toolbar: [
+            {
+                type: "container",
+                body: [
+                    {
+                        type: "tpl",
+                        tpl: "SCNU_ACM_RANK",
+                        className:"text-3xl italic font-mono ml-7 m-1",
+                    },
+                    {
+                        type:"button",
+                        level:"success",
+                        label:"登录",
+                        className:"float-right m-1",
+                        visibleOn:"${OR(ISEMPTY(ls:token), LEN(ls:token) == 0)}",
+                        "onEvent": {
+                            "click": {
+                              "actions": [
+                                {
+                                  "actionType": "confirmDialog",
+                                  "dialog": {
+                                    "type": "dialog",
+                                    "title": "${title}",
+                                    "confirmBtnLevel": "primary",
+                                    "data": {
+                                      "&": "$$",
+                                      "title": "登录"
+                                    },
+                                    "body": [
+                                      {
+                                        "type": "form",
+                                        "api": {
+                                          "method": "post",
+                                          "url":"http://${ip}:${port}/login",
+                                          "dataType": "form-data",
+                                          "data":{
+                                            "stu_id":"${stuID}",
+                                            "password": "${password}",
+                                          },
+                                          adaptor: function (payload, response, api, context) {
+                                            if (payload.status === 0) {
+                                              localStorage.setItem("token", payload.data.token)
+                                              localStorage.setItem("level", payload.data.user.level)
+                                              localStorage.setItem("name", payload.data.user.name)
+                                              localStorage.setItem("stu_id", payload.data.user.stu_id)
+                                              localStorage.setItem("cf_id", payload.data.user.cf_id)
+                                              localStorage.setItem("vj_name", payload.data.user.vj_name)
+                                              console.log(localStorage.getItem("user"))
+                                            }
+                                            return payload;
+                                          }
+                                        },
+                                        "body": [
+                                          {
+                                            "type": "input-text",
+                                            "name": "stuID",
+                                            "label": "学号"
+                                          },
+                                          {
+                                            "type": "input-text",
+                                            "name": "password",
+                                            "label": "密码"
+                                          },
+                                        ],
+                                        "onEvent":{
+                                          "submitSucc": {
+                                            "actions":[
+                                              {
+                                              "actionType":"setValue",
+                                              "componentId":"root",
+                                              "args":{
+                                                "value": 
+                                                  {
+                                                    "token": "${event.data.result.data.token}",
+                                                    "user": "${event.data.result.data.user}"
+                                                  }
+                                                
+                                              }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                              ]
+                            }
+                        }
+                    },
+                    {
+                        type:"button",
+                        level:"info",
+                        label:"注册",
+                        className:"float-right m-1",
+                        visibleOn:"${OR(ISEMPTY(ls:token), LEN(ls:token) == 0)}",
+                        "onEvent":{
+                          "click":{
+                            "actions":[
+                            {
+                                  "actionType": "confirmDialog",
+                                  "dialog": {
+                                    "type": "dialog",
+                                    "title": "${title}",
+                                    "confirmBtnLevel": "primary",
+                                    "data": {
+                                      "&": "$$",
+                                      "title": "注册"
+                                    },
+                                    "body": [
+                                      {
+                                        "type": "form",
+                                        "preventEnterSubmit": true,
+                                        "api": {
+                                          "method": "post",
+                                          "url":"http://${ip}:${port}/register",
+                                          "dataType": "form",
+                                        },
+                                        "body": [
+                                          {
+                                            "type": "input-text",
+                                            "name": "stu_id",
+                                            "label": "学号"
+                                          },
+                                          {
+                                            "type": "input-text",
+                                            "name": "password",
+                                            "label": "密码"
+                                          },
+                                          {
+                                            "type":"input-text",
+                                            "name":"vj_name",
+                                            "label":"vjudge名称"
+                                          },
+                                          {
+                                            "type":"input-text",
+                                            "name":"nc_name",
+                                            "label":"牛客名称"
+                                          },
+                                          {
+                                            "type":"input-text",
+                                            "name":"cf_id",
+                                            "label":"cfID",
+                                          },
+                                          {
+                                            "type":"input-text",
+                                            "name":"name",
+                                            "label":"真实姓名",
+                                          },
+                                          {
+                                            "type":"radios",
+                                            "name":"sex",
+                                            "label":"性别",
+                                            "options":[
+                                              {
+                                                "label":"男",
+                                                "value":1,
+                                              },
+                                              {
+                                                "label":"女",
+                                                "value":0,
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type":"input-text",
+                                            "name":"email",
+                                            "label":"邮箱",
+                                            "addOn": {
+                                              "name": "countdown1",
+                                              "label": "发送",
+                                              "type": "button",
+                                              
+                                              "countDown": 60,
+                                              "countDownTpl": "${timeLeft} 秒后重发",
+                                              "actionType": "ajax",
+                                              "api": {
+                                                "url":"http://${ip}:${port}/sendEmail",
+                                                "method":"post",
+                                                "dataType": "form",
+                                                "data":{
+                                                  "email":"${email}",
+                                                  "stu_id":"${stu_id}",
+                                                }
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type":"input-text",
+                                            "name":"code",
+                                            "label":"验证码"
+                                          }
+                                        ],
+                                      }
+                                    ]
+                                  }
+                                },
+
+                            ]
+                          }
+                        }
+                    },
+                    {
+                        type:"button",
+                        level:"danger",
+                        label:"退出",
+                        className:"float-right m-1",
+                        visibleOn:"${AND(ISEMPTY(ls:token) === false, LEN(ls:token) > 0)}",
+                        "onClick": "localStorage.clear();location.reload();"
+                    },
+                    {
+                        type:"button",
+                        level:"warning",
+                        label:"添加比赛",
+                        className:"float-right m-1",
+                        visibleOn:"${AND(ISEMPTY(ls:level) === false, ls:level >= 1)}",
+                        "actionType":"dialog",
+                        "dialog":{
+                                  "title":"添加比赛",
+                                  "body":{
+                                    "type":"form",
+                                    "api": {
+                                                "url":"http://${ip}:${port}/root/createCompetition",
+                                                "method":"post",
+                                                "dataType": "form-data",
+                                                "data":{
+                                                  "kind":"${opt}",
+                                                  "name":"${name}",
+                                                  "cp_id":"${contest_id}",
+                                                  "token":"${token}"
+                                                }
+                                    },
+                                    "body": [
+                                      {
+                                        "label": "类型",
+                                        "type": "radios",
+                                        "name": "opt",
+                                        "inline": true,
+                                        "options": [
+                                          {
+                                            "label": "vjudge",
+                                            "value": "0",
+                                          },
+                                          {
+                                            "label": "牛客",
+                                            "value": "1",
+                                          },
+                                          {
+                                            "label": "自定义",
+                                            "value": "3",
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "input-text",
+                                        "name": "name",
+                                        "label": "比赛名称",
+                                      },
+                                      {
+                                        "type": "input-text",
+                                        "name": "contest_id",
+                                        "label": "比赛id",
+                                      },
+                                      {
+                                        "type": "input-text",
+                                        "name": "token",
+                                        "label": "token",
+                                        "visibleOn":"${opt == 0}",
+                                      },
+                                   ]
+                                  }
+                                 
+                            }
+                              
+
+                    },
+                    {
+                        type:"button",
+                        level:"info",
+                        label:"权限管理",
+                        className:"float-right m-1",
+                        visibleOn:"${AND(ISEMPTY(ls:level) === false, ls:level >= 2)}",
+                    },
+                ],
+                className:"m-4 pr-3.5",
+            },
+            {
+                type: "divider",
+            }
+          ],
+          body: {
+            "type": "service",
+            "api": "http://${ip}:${port}/competition/person",
+            "body": [
+                {
+                  type: "container",
+                  className:"px-40",
+                  body: [
+                    {
+                      "type": "button-group-select",
+                      "name": "type",
+                      "value": "a",
+                      "tiled": "true",
+                      "options": [
+                      {
+                          "label": "个人",
+                          "value": "a",
+                      },
+                      {
+                          "label": "团队",
+                          "value": "b"
+                      },
+                      ]
+                  },
+                  {
+                      "type": "table",
+                      "source": "${rank}",
+                      "itemAction": {
+                        "type": "button",
+                        "actionType": "dialog",
+                        "dialog": {
+                          "title": "详情",
+                          "source": "rows",
+                          "body": [
+                            {
+                              "type":"service",
+                              "api": "http://${ip}:${port}/getUserCompetitions?stu_id=${stu_id}",
+                              "body":[{
+                                "type": "table",
+                                // "source":"${data}",
+                                "columns": [
+                                  {
+                                      "name": "name",
+                                      "label": "姓名",
+                                      "align":"center",
+                                  },
+                                  {
+                                      "name": "stu_id",
+                                      "label": "学号",
+                                      "align":"center",
+                                  },
+                                  {
+                                      "name": "comp_name",
+                                      "label": "比赛名称",
+                                      "align":"center",
+                                  },
+                                  {
+                                      "name": "rank",
+                                      "label": "排名",
+                                      "align":"center",
+                                  },
+                                  {
+                                      "name": "solve",
+                                      "label": "做题数",
+                                      "align":"center",
+                                  },
+                                  {
+                                      "name": "penalty",
+                                      "label": "罚时",
+                                      "align":"center",
+                                  }
+                                ]
+                              }]
+                              
+                            }
+                          ]
+                        }
+                      },
+                      "columns": [
+                      {
+                          "name": "rank",
+                          "label": "排名",
+                          "align":"center",
+                      },
+                      {
+                          "name": "name",
+                          "label": "名称",
+                          "align":"center",
+                      },
+                      {
+                          "name": "stu_id",
+                          "label": "学号",
+                          "align":"center",
+                      },
+                      {
+                          "name": "score",
+                          "label": "积分",
+                          "align":"center",
+                      }
+                      ]
+                  }
+                ]
+                }
+            ]
+         }
+        };
+        let amisScoped = amis.embed('#root', amisJSON, {}, {theme:'antd'});
+      })();
+    </script>
+  </body>
+</html>
