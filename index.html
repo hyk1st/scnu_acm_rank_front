@@ -92,6 +92,7 @@
                                               localStorage.setItem("stu_id", payload.data.user.stu_id)
                                               localStorage.setItem("cf_id", payload.data.user.cf_id)
                                               localStorage.setItem("vj_name", payload.data.user.vj_name)
+                                              localStorage.setItem("group_id", payload.data.user.group_id)
                                               console.log(localStorage.getItem("user"))
                                             }
                                             return payload;
@@ -257,6 +258,130 @@
                     },
                     {
                         type:"button",
+                        level:"success",
+                        label:"创建队伍",
+                        className:"float-right m-1",
+                        visibleOn:"${AND(ISEMPTY(ls:token) === false, LEN(ls:token) > 0, ls:group_id < 1)}",
+                        "onEvent": {
+                            "click": {
+                              "actions": [
+                                {
+                                  "actionType": "confirmDialog",
+                                  "dialog": {
+                                    "type": "dialog",
+                                    "title": "创建队伍",
+                                    "confirmBtnLevel": "primary",
+                                    "data": {
+                                      "&": "$$",
+                                      "title": "创建队伍"
+                                    },
+                                    "body": [
+                                      {
+                                        "type": "form",
+                                        "api": {
+                                          "method": "post",
+                                          "url":"http://${ip}:${port}/user/createTeam",
+                                          "dataType": "form-data",
+                                          "data":{
+                                            "name":"${stuID}",
+                                            "key": "${password}",
+                                          },
+                                          "headers": {
+                                            "Authorization":"${ls:token}"
+                                          },
+                                          adaptor: function (payload, response, api, context) {
+                                            if (payload.status === 0) {
+                                              localStorage.setItem("group_id", payload.data.group_id)
+                                              location.reload()
+                                            }
+                                            return payload;
+                                          }
+                                        },
+                                        "body": [
+                                          {
+                                            "type": "input-text",
+                                            "name": "stuID",
+                                            "label": "队伍名称"
+                                          },
+                                          {
+                                            "type": "input-text",
+                                            "name": "password",
+                                            "label": "入队口令"
+                                          },
+                                        ],
+                                        
+                                      }
+                                    ]
+                                  }
+                                },
+                              ]
+                            }
+                        }
+                    },
+                    {
+                        type:"button",
+                        level:"info",
+                        label:"加入队伍",
+                        className:"float-right m-1",
+                        visibleOn:"${AND(ISEMPTY(ls:token) === false, LEN(ls:token) > 0, ls:group_id < 1)}",
+                        "onEvent": {
+                            "click": {
+                              "actions": [
+                                {
+                                  "actionType": "confirmDialog",
+                                  "dialog": {
+                                    "type": "dialog",
+                                    "title": "加入队伍",
+                                    "confirmBtnLevel": "primary",
+                                    "data": {
+                                      "&": "$$",
+                                      "title": "加入队伍"
+                                    },
+                                    "body": [
+                                      {
+                                        "type": "form",
+                                        "api": {
+                                          "method": "post",
+                                          "url":"http://${ip}:${port}/user/joinTeam",
+                                          "dataType": "form-data",
+                                          "data":{
+                                            "key": "${password}",
+                                            "stu_id":"${leader}",
+                                          },
+                                          "headers": {
+                                            "Authorization":"${ls:token}"
+                                          },
+                                          adaptor: function (payload, response, api, context) {
+                                            if (payload.status === 0) {
+                                              localStorage.setItem("group_id", payload.data.group_id)
+                                              location.reload()
+                                            }
+                                            return payload;
+                                          }
+                                        },
+                                        "body": [
+                                          {
+                                            "type": "input-text",
+                                            "name": "password",
+                                            "label": "入队口令"
+                                          },
+                                          {
+                                            "type": "input-text",
+                                            "name": "leader",
+                                            "label": "队长学号"
+                                          }
+                                        ],
+                                        
+                                      }
+                                    ]
+                                  }
+                                },
+                              ]
+                            }
+                        }
+                    },
+                    {
+                        type:"button",
                         level:"warning",
                         label:"添加比赛",
                         className:"float-right m-1",
@@ -335,30 +460,31 @@
                 type: "divider",
             }
           ],
-          body: {
+          body: [
+          {
+                      "type": "button-group-select",
+                      "name": "type",
+                      "value": "person",
+                      "tiled": "true",
+                      "options": [
+                      {
+                          "label": "个人",
+                          "value": "person",
+                      },
+                      {
+                          "label": "团队",
+                          "value": "group"
+                      },
+                      ]
+                  },  
+          {
             "type": "service",
-            "api": "http://${ip}:${port}/competition/person",
+            "api": "http://${ip}:${port}/competition/${type}",
             "body": [
                 {
                   type: "container",
                   className:"px-40",
                   body: [
-                    {
-                      "type": "button-group-select",
-                      "name": "type",
-                      "value": "a",
-                      "tiled": "true",
-                      "options": [
-                      {
-                          "label": "个人",
-                          "value": "a",
-                      },
-                      {
-                          "label": "团队",
-                          "value": "b"
-                      },
-                      ]
-                  },
                   {
                       "type": "table",
                       "source": "${rank}",
@@ -371,7 +497,21 @@
                           "body": [
                             {
                               "type":"service",
-                              "api": "http://${ip}:${port}/getUserCompetitions?stu_id=${stu_id}",
+                              "api": "http://${ip}:${port}/TeamDetail?stu_id=${stu_id}&type=${type}",
+                              "body":[
+                                {
+                                  "type":"tpl",
+                                  "tpl":"队伍名称: ${name} \n",
+                                },
+                                {
+                                  "type":"tpl",
+                                  "tpl":"队伍成员: ${users}",
+                                },
+                              ]
+                            },
+                            {
+                              "type":"service",
+                              "api": "http://${ip}:${port}/${type}Competitions?stu_id=${stu_id}",
                               "body":[{
                                 "type": "table",
                                 // "source":"${data}",
@@ -379,11 +519,6 @@
                                   {
                                       "name": "name",
                                       "label": "姓名",
-                                      "align":"center",
-                                  },
-                                  {
-                                      "name": "stu_id",
-                                      "label": "学号",
                                       "align":"center",
                                   },
                                   {
@@ -426,7 +561,7 @@
                       },
                       {
                           "name": "stu_id",
-                          "label": "学号",
+                          "label": "学号(队伍id)",
                           "align":"center",
                       },
                       {
@@ -440,6 +575,7 @@
                 }
             ]
          }
+        ]
         };
         let amisScoped = amis.embed('#root', amisJSON, {}, {theme:'antd'});
       })();
